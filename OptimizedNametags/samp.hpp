@@ -14,7 +14,7 @@ enum SAMPVER {
 
 const uintptr_t samp_addressess[][11]
 {
-    // CPlayerTags::CPlayerTags, Drawer -> call CPlayerTags::DrawLabel, CPlayerTags::OnLostDevice, CPlayerTags::OnResetDevice <- UNUSED, CFonts, CFonts::DrawText, CFonts::GetTextScreenSize, D3DXMATRIX Projection, D3DXMATRIX View, CDeathWindow, CDeathWindow::CreateAuxFonts
+    // CPlayerTags::CPlayerTags <- UNUSED, Drawer -> call CPlayerTags::DrawLabel, CPlayerTags::OnLostDevice, CPlayerTags::OnResetDevice <- UNUSED, CFonts, CFonts::DrawText, CFonts::GetTextScreenSize, D3DXMATRIX Projection, D3DXMATRIX View, CDeathWindow, CDeathWindow::CreateAuxFonts
     {0x68610, 0x70F96, 0x68F70, 0x68FA0, 0x21A0FC, 0x66C80, 0x66B20, 0x12C980, 0x12C940, 0x21A0EC, 0x65F10},
     {0x6C580, 0x74E8A, 0x6CEE0, 0x6CF10, 0x26E8E4, 0x6ABF0, 0x6AA90, 0x140B00, 0x140AC0, 0x26E8D0, 0x69440}
 };
@@ -58,10 +58,11 @@ inline SAMPVER sampGetVersion()
 
 #define SAMP_OFFSET samp_addressess[sampGetVersion() - 2]
 
-inline uintptr_t sampGetPlayerTagsConstructor()
-{
-    return sampGetBase() + SAMP_OFFSET[0];
-}
+// UNUSED
+//inline uintptr_t sampGetPlayerTagsConstructor()
+//{
+//    return sampGetBase() + SAMP_OFFSET[0];
+//}
 
 inline uintptr_t sampGetPlayerTagsDrawerCallPtr()
 {
@@ -73,10 +74,11 @@ inline uintptr_t sampGetPlayerTagsOnLostDevice()
     return sampGetBase() + SAMP_OFFSET[2];
 }
 
-inline uintptr_t sampGetPlayerTagsOnResetDevice()
-{
-    return sampGetBase() + SAMP_OFFSET[3];
-}
+// UNUSED
+//inline uintptr_t sampGetPlayerTagsOnResetDevice()
+//{
+//    return sampGetBase() + SAMP_OFFSET[3];
+//}
 
 inline void sampDrawText(ID3DXSprite* sprite, const char* text, RECT& rect, DWORD color, BOOL shadow)
 {
@@ -102,7 +104,7 @@ inline D3DXMATRIX* sampGetViewMatrix()
     return reinterpret_cast<D3DXMATRIX*>(sampGetBase() + SAMP_OFFSET[8]);
 }
 
-inline ID3DXFont* sampGetDeathWindowFonts()
+inline ID3DXFont* sampGetDeathWindowFont()
 {
     static ID3DXFont* auxFont = nullptr;
     static uintptr_t CDeathWindow = 0;

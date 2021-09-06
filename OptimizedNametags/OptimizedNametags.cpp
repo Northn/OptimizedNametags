@@ -2,12 +2,12 @@
 #include "OptimizedNametags.h"
 
 bool OptimizedNametags::shouldRedrawNametag(NameTag& nt, const char* name, D3DCOLOR color, bool isAfk) {
-	bool ret = nt.redraw || nt.isAfk != isAfk || nt.color != color || strcmp(name, nt.nametag) != 0;
+	bool ret = (!nt.sprite || !nt.texture || !nt.surface || !nt.renderToSurface) || nt.redraw || nt.isAfk != isAfk || nt.color != color;
 	if (nt.redraw) nt.redraw = false;
 	return ret;
 }
 
-void OptimizedNametags::createElements(NameTag& nt)
+bool OptimizedNametags::createElements(NameTag& nt, SIZE& size)
 {
 	static D3DSURFACE_DESC desc;
 
@@ -18,52 +18,44 @@ void OptimizedNametags::createElements(NameTag& nt)
 		DX_SAFE_RELEASE(nt.renderToSurface);
 		DX_SAFE_RELEASE(nt.surface);
 
-		D3DXCreateSprite(mD3DDevice, &nt.sprite);
-		D3DXCreateTexture(mD3DDevice, 192, 64, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &nt.texture);
-		nt.texture->GetSurfaceLevel(0, &nt.surface);
-		nt.surface->GetDesc(&desc);
-		D3DXCreateRenderToSurface(mD3DDevice, desc.Width,
-			desc.Height, desc.Format, TRUE, D3DFMT_D16, &nt.renderToSurface);
-
-		nt.redraw = true;
-		nt.center = 0.f;
+		if (FAILED(D3DXCreateSprite(mD3DDevice, &nt.sprite))) return false;
+		if (FAILED(D3DXCreateTexture(mD3DDevice, size.cx + 1, size.cy + 3 + 48, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &nt.texture)))
+			return false;
+		if (FAILED(nt.texture->GetSurfaceLevel(0, &nt.surface))) return false;
+		if (FAILED(nt.surface->GetDesc(&desc))) return false;
+		if (FAILED(D3DXCreateRenderToSurface(mD3DDevice, desc.Width,
+			desc.Height, desc.Format, TRUE, D3DFMT_D16, &nt.renderToSurface))) return false;
 	}
-}
-
-void* __fastcall CPlayerTags__CPlayerTags(void* self, void* edx, IDirect3DDevice9* pDevice)
-{
-	gInstance.mD3DDevice = pDevice;
-
-	return reinterpret_cast<decltype(CPlayerTags__CPlayerTags)*>(gInstance.mHooks.CPlayerTags__CPlayerTags->getTrampoline())
-		(self, edx, pDevice);
+	return true;
 }
 
 void __fastcall CPlayerTags__Draw(uintptr_t self, int id, CVector* playerPos, const char* szText,
 	D3DCOLOR color, float fDistanceToCamera, bool bDrawStatus, int nStatus)
 {
 	auto& nt = gInstance.mNametags[id];
-	gInstance.createElements(nt);
 
 	auto& pDevice = gInstance.mD3DDevice;
 	auto isAfk = bDrawStatus && nStatus == 2;
 
 	if (gInstance.shouldRedrawNametag(nt, szText, color, isAfk))
 	{
-		RECT rect{ 0, 0, 192, 64 };
+		auto textSize = sampGetMeasuredTextSize(szText);
+		if (!gInstance.createElements(nt, textSize)) return;
 
-		nt.renderToSurface->BeginScene(nt.surface, NULL);
+		RECT rect{ 0, 0, textSize.cx + 1, textSize.cy + 1 };
+
+		if (SUCCEEDED(nt.renderToSurface->BeginScene(nt.surface, NULL)))
 		{
 			pDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0, 0, 0);
-			nt.sprite->Begin(D3DXSPRITE_ALPHABLEND);
+			if (SUCCEEDED(nt.sprite->Begin(D3DXSPRITE_ALPHABLEND)))
 			{
 				pDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_BLENDFACTOR);
-				auto textSize = sampGetMeasuredTextSize(szText);
 				nt.center = static_cast<float>(textSize.cx) / 2.f;
 				sampDrawText(nt.sprite, szText, rect, color, true);
 
 				if (isAfk)
 				{
-					auto auxFont = sampGetDeathWindowFonts();
+					auto auxFont = sampGetDeathWindowFont();
 
 					if (auxFont)
 					{
@@ -75,13 +67,12 @@ void __fastcall CPlayerTags__Draw(uintptr_t self, int id, CVector* playerPos, co
 						auxFont->DrawTextA(nt.sprite, "E", 1, &rect, DT_NOCLIP | DT_LEFT, -1);
 					}
 				}
+				nt.sprite->End();
 			}
-			nt.sprite->End();
+			nt.renderToSurface->EndScene(0);
 		}
-		nt.renderToSurface->EndScene(0);
 
 		nt.color = color;
-		strcpy_s(nt.nametag, sizeof(nt.nametag), szText);
 		nt.isAfk = isAfk;
 	}
 
@@ -99,10 +90,12 @@ void __fastcall CPlayerTags__Draw(uintptr_t self, int id, CVector* playerPos, co
 
 	if (Out.z > 1.f) return;
 
-	nt.sprite->Begin(D3DXSPRITE_ALPHABLEND);
-	D3DXVECTOR3 center{ nt.center, 0.f, 0.f };
-	nt.sprite->Draw(nt.texture, NULL, &center, &Out, 0xFFFFFFFF);
-	nt.sprite->End();
+	if (SUCCEEDED(nt.sprite->Begin(D3DXSPRITE_ALPHABLEND)))
+	{
+		D3DXVECTOR3 center{ nt.center, 0.f, 0.f };
+		nt.sprite->Draw(nt.texture, NULL, &center, &Out, 0xFFFFFFFF);
+		nt.sprite->End();
+	}
 
 	//if (bDrawStatus and nStatus == 2)
 	/*{
