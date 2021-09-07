@@ -12,4 +12,6 @@
 #include "rtdhook.hpp"
 #include "samp.hpp"
 
+#include <intrin.h>
+
 #endif //PCH_H

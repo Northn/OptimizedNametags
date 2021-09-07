@@ -23,24 +23,26 @@ public:
 	NameTag mNametags[MAX_PLAYERS];
 
 	struct {
-		rtdhook* CPlayerTags__OnLostDevice = nullptr;
+		rtdhook
+			* CPlayerTags__OnLostDevice = nullptr,
+			* CEntity__GetDistanceToCamera = nullptr;
 		rtdhook_call* CPlayerTags__Draw = nullptr;
 	} mHooks;
 
 	IDirect3DDevice9* mD3DDevice = nullptr;
 
 	bool     shouldRedrawNametag(NameTag& nt, const char* name, D3DCOLOR color, bool isAfk);
-	bool     createElements(NameTag& nt, SIZE& size);
+	bool     createElements(NameTag& nt, SIZE& textureSize);
 };
 
 #define DX_SAFE_RELEASE(p) if (p != nullptr) { p->Release(); p = nullptr; }
 
 inline OptimizedNametags gInstance;
 
-void* __fastcall CPlayerTags__CPlayerTags(void* self, void* edx, IDirect3DDevice9* pDevice);
-
 void __fastcall CPlayerTags__Draw(uintptr_t self, int id, CVector* playerPos, const char* szText,
 	D3DCOLOR color, float fDistanceToCamera, bool bDrawStatus, int nStatus);
 void CPlayerTags__Draw_Naked();
+
+double __fastcall CEntity__GetDistanceToCamera(uintptr_t self);
 
 void __fastcall CPlayerTags__OnLostDevice(void* self);
