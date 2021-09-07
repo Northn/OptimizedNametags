@@ -21,7 +21,7 @@ bool OptimizedNametags::createElements(NameTag& nt, SIZE& textureSize)
 		DX_SAFE_RELEASE(nt.surface);
 		
 		textureSize.cx += 1 /*outline*/ + 1;
-		textureSize.cy += 1 /*outline*/ + 3 /*AFK padding*/ + 48 /*AFK icon*/;
+		textureSize.cy += 1 /*outline*/ + 4 /*AFK padding*/ + 48 /*AFK icon*/;
 		if ((textureSize.cx % 2) != 0) textureSize.cx++;
 		if ((textureSize.cy % 2) != 0) textureSize.cy++;
 
@@ -66,7 +66,7 @@ void __fastcall CPlayerTags__Draw(uintptr_t self, int id, CVector* playerPos, co
 
 					if (auxFont)
 					{
-						rect.top += textSize.cy + 3;
+						rect.top += textSize.cy + 4;
 						rect.left = static_cast<long>(nt.center / 2.6f);
 						auxFont->DrawTextA(nt.sprite, "C", 1, &rect, DT_NOCLIP | DT_LEFT, D3DCOLOR_XRGB(0, 0, 0));
 						rect.left += 3;
@@ -83,7 +83,7 @@ void __fastcall CPlayerTags__Draw(uintptr_t self, int id, CVector* playerPos, co
 		}
 	}
 
-	D3DXVECTOR3 TagPos{ playerPos->x, playerPos->y, playerPos->z + 0.25f + (fDistanceToCamera * 0.047f) };
+	D3DXVECTOR3 TagPos{ playerPos->x, playerPos->y, playerPos->z + 0.21f + (fDistanceToCamera * 0.05f)};
 
 	D3DVIEWPORT9 Viewport;
 	pDevice->GetViewport(&Viewport);
