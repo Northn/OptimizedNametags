@@ -8,8 +8,6 @@
 #include <assert.h>
 #endif
 
-#pragma warning(disable : 6387) // warning C6387: _Param_(4) may be 0: this does not adhere to the specification for the function "VirtualProtect"
-
 class rtdhook {
 	typedef unsigned char byte_t;
 private:
@@ -75,7 +73,7 @@ public:
 
 		memset((void*)(mHookAddress + 5), 0x90, mHookSize - 5);
 
-		VirtualProtect((LPVOID)mHookAddress, mHookSize, old_protection, nullptr);
+		VirtualProtect((LPVOID)mHookAddress, mHookSize, old_protection, &old_protection);
 
 		setEnabled(true);
 	}
@@ -94,7 +92,7 @@ public:
 
 		memcpy((void*)mHookAddress, (void*)mOriginalPrologue, mHookSize);
 
-		VirtualProtect((LPVOID)mHookAddress, mHookSize, old_protection, nullptr);
+		VirtualProtect((LPVOID)mHookAddress, mHookSize, old_protection, &old_protection);
 
 		setEnabled(false);
 	}
@@ -154,7 +152,7 @@ public:
 
 		*reinterpret_cast<uintptr_t*>(mHookAddress + 1) = mDetourAddress - mHookAddress - 5;
 
-		VirtualProtect((LPVOID)mHookAddress, 5, old_protection, nullptr);
+		VirtualProtect((LPVOID)mHookAddress, 5, old_protection, &old_protection);
 
 		setEnabled(true);
 	}
@@ -173,7 +171,7 @@ public:
 
 		*reinterpret_cast<uintptr_t*>(mHookAddress + 1) = mHookedFunctionAddress;
 
-		VirtualProtect((LPVOID)mHookAddress, 5, old_protection, nullptr);
+		VirtualProtect((LPVOID)mHookAddress, 5, old_protection, &old_protection);
 
 		setEnabled(false);
 	}
@@ -200,7 +198,7 @@ private:
 		uintptr_t* vmt = *reinterpret_cast<uintptr_t**>(mVmtAddress);
 		VirtualProtect(vmt + method_id, 4, PAGE_EXECUTE_READWRITE, &old_protection);
 		*reinterpret_cast<uintptr_t*>(vmt + method_id) = detour_function;
-		VirtualProtect(vmt + method_id, 4, old_protection, nullptr);
+		VirtualProtect(vmt + method_id, 4, old_protection, &old_protection);
 	}
 public:
 	/**
@@ -290,5 +288,3 @@ public:
 		return *reinterpret_cast<uintptr_t*>(vmt + method_id);
 	}
 };
-
-#pragma warning(default : 6387)

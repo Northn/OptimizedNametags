@@ -83,7 +83,7 @@ inline void sampDrawText(ID3DXSprite* sprite, const char* text, RECT& rect, DWOR
 
 inline SIZE sampGetMeasuredTextSize(const char* text)
 {
-    static SIZE size;
+    SIZE size;
     reinterpret_cast<void(__thiscall*)(void*, SIZE*, const char*, int)>(sampGetBase() + SAMP_OFFSET[6])
         (*reinterpret_cast<void**>(sampGetBase() + SAMP_OFFSET[4]), &size, text, DT_LEFT | DT_NOCLIP);
     return size;

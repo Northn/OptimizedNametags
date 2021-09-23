@@ -31,7 +31,7 @@ public:
 
 	IDirect3DDevice9* mD3DDevice = nullptr;
 
-	bool     shouldRedrawNametag(NameTag& nt, const char* name, D3DCOLOR color, bool isAfk);
+	bool     shouldRedrawNametag(NameTag& nt, D3DCOLOR color, bool isAfk);
 	bool     createElements(NameTag& nt, SIZE& textureSize);
 };
 

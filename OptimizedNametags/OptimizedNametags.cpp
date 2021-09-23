@@ -3,7 +3,7 @@
 
 #pragma intrinsic(_ReturnAddress)
 
-bool OptimizedNametags::shouldRedrawNametag(NameTag& nt, const char* name, D3DCOLOR color, bool isAfk) {
+bool OptimizedNametags::shouldRedrawNametag(NameTag& nt, D3DCOLOR color, bool isAfk) {
 	bool ret = (!nt.sprite || !nt.texture || !nt.surface || !nt.renderToSurface) || nt.redraw || nt.isAfk != isAfk || nt.color != color;
 	if (nt.redraw) nt.redraw = false;
 	return ret;
@@ -19,8 +19,10 @@ bool OptimizedNametags::createElements(NameTag& nt, SIZE& textureSize)
 		DX_SAFE_RELEASE(nt.texture);
 		DX_SAFE_RELEASE(nt.renderToSurface);
 		DX_SAFE_RELEASE(nt.surface);
-		
-		textureSize.cx += 1 /*outline*/ + 1;
+
+		/* Reserved due to some unknown reasons: nicknames sometimes gets cropped and can't be fully rendered.
+		 * I have no idea why it's happening */
+		textureSize.cx += 1 /*outline*/ + 48 /*reserved*/ + 1;
 		textureSize.cy += 1 /*outline*/ + 4 /*AFK padding*/ + 48 /*AFK icon*/;
 		if ((textureSize.cx % 2) != 0) textureSize.cx++;
 		if ((textureSize.cy % 2) != 0) textureSize.cy++;
@@ -44,7 +46,7 @@ void __fastcall CPlayerTags__Draw(uintptr_t self, int id, CVector* playerPos, co
 	auto& pDevice = gInstance.mD3DDevice;
 	auto isAfk = bDrawStatus && nStatus == 2;
 
-	if (gInstance.shouldRedrawNametag(nt, szText, color, isAfk))
+	if (gInstance.shouldRedrawNametag(nt, color, isAfk))
 	{
 		auto textSize = sampGetMeasuredTextSize(szText);
 		SIZE textureSize = textSize;
@@ -93,11 +95,13 @@ void __fastcall CPlayerTags__Draw(uintptr_t self, int id, CVector* playerPos, co
 	D3DXMatrixIdentity(&matIdent);
 
 	D3DXVec3Project(&Out, &TagPos, &Viewport, sampGetProjectionMatrix(), sampGetViewMatrix(), &matIdent);
+	Out.x -= nt.center;
+	Out.x = static_cast<float>(static_cast<long>(Out.x));
+	Out.y = static_cast<float>(static_cast<long>(Out.y));
 
 	if (SUCCEEDED(nt.sprite->Begin(D3DXSPRITE_ALPHABLEND)))
 	{
-		D3DXVECTOR3 center{ nt.center, 0.f, 0.f };
-		nt.sprite->Draw(nt.texture, NULL, &center, &Out, 0xFFFFFFFF);
+		nt.sprite->Draw(nt.texture, NULL, NULL, &Out, 0xFFFFFFFF);
 		nt.sprite->End();
 	}
 
