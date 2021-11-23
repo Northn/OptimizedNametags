@@ -3,8 +3,8 @@
 
 #pragma intrinsic(_ReturnAddress)
 
-bool OptimizedNametags::shouldRedrawNametag(NameTag& nt, D3DCOLOR color, bool isAfk) {
-	bool ret = (!nt.sprite || !nt.texture || !nt.surface || !nt.renderToSurface) || nt.redraw || nt.isAfk != isAfk || nt.color != color;
+bool OptimizedNametags::shouldRedrawNametag(NameTag& nt, D3DCOLOR color, bool isAfk, const char* name) {
+	bool ret = (!nt.sprite || !nt.texture || !nt.surface || !nt.renderToSurface) || nt.redraw || nt.isAfk != isAfk || nt.color != color || strcmp(nt.name, name) != 0;
 	if (nt.redraw) nt.redraw = false;
 	return ret;
 }
@@ -46,7 +46,7 @@ void __fastcall CPlayerTags__Draw(uintptr_t self, int id, CVector* playerPos, co
 	auto& pDevice = gInstance.mD3DDevice;
 	auto isAfk = bDrawStatus && nStatus == 2;
 
-	if (gInstance.shouldRedrawNametag(nt, color, isAfk))
+	if (gInstance.shouldRedrawNametag(nt, color, isAfk, szText))
 	{
 		auto textSize = sampGetMeasuredTextSize(szText);
 		SIZE textureSize = textSize;
@@ -80,6 +80,7 @@ void __fastcall CPlayerTags__Draw(uintptr_t self, int id, CVector* playerPos, co
 
 				nt.color = color;
 				nt.isAfk = isAfk;
+				strcpy_s(nt.name, sizeof(nt.name), szText);
 			}
 			nt.renderToSurface->EndScene(0);
 		}

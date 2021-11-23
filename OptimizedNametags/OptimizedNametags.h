@@ -7,6 +7,7 @@ class OptimizedNametags
 {
 public:
 	static constexpr int MAX_PLAYERS = 1004;
+	static constexpr int MAX_PLAYER_NAME = 24;
 
 	struct NameTag {
 		ID3DXSprite* sprite = nullptr;
@@ -18,6 +19,7 @@ public:
 		float center = 0.f;
 		bool redraw = false,
 			isAfk = false;
+		char name[MAX_PLAYER_NAME + 7 /* (999)*/ + 1]{0};
 	};
 
 	NameTag mNametags[MAX_PLAYERS];
@@ -31,7 +33,7 @@ public:
 
 	IDirect3DDevice9* mD3DDevice = nullptr;
 
-	bool     shouldRedrawNametag(NameTag& nt, D3DCOLOR color, bool isAfk);
+	bool     shouldRedrawNametag(NameTag& nt, D3DCOLOR color, bool isAfk, const char* name);
 	bool     createElements(NameTag& nt, SIZE& textureSize);
 };
 
